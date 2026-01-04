@@ -10,6 +10,7 @@ Good AI Philosophy: Leverage, not lore.
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from enum import Enum
+import math
 
 
 class BottleneckSeverity(Enum):
@@ -477,7 +478,6 @@ class BottleneckAnalyzer:
         """Calculate priority score (0-100)."""
         # Cost score (0-40 points)
         # Logarithmic scale: $100K = 20, $1M = 30, $10M = 40
-        import math
         if cost_impact <= 0:
             cost_score = 0
         else:

@@ -27,6 +27,18 @@ class OEEResult:
     period: str
     data_quality_score: float
 
+    def to_dict(self) -> dict:
+        """Convert to dictionary."""
+        return {
+            "availability": self.availability,
+            "performance": self.performance,
+            "quality": self.quality,
+            "oee": self.oee,
+            "losses": self.losses,
+            "period": self.period,
+            "data_quality_score": self.data_quality_score,
+        }
+
 
 @dataclass
 class MetricValue:

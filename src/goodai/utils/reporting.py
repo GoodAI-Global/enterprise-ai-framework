@@ -7,11 +7,17 @@ Supports JSON, Markdown, and HTML output.
 Good AI Philosophy: Evidence over opinions.
 """
 
+import html
 import json
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
+
+
+def _escape_html(text: str) -> str:
+    """Escape HTML special characters for security."""
+    return html.escape(str(text))
 
 
 class ReportGenerator:
@@ -224,7 +230,7 @@ class ReportGenerator:
         html_parts.append("<!DOCTYPE html>")
         html_parts.append("<html>")
         html_parts.append("<head>")
-        html_parts.append(f"<title>{self.title}</title>")
+        html_parts.append(f"<title>{_escape_html(self.title)}</title>")
         html_parts.append("<style>")
         html_parts.append(self._get_default_css())
         html_parts.append("</style>")
@@ -232,10 +238,10 @@ class ReportGenerator:
         html_parts.append("<body>")
 
         # Header
-        html_parts.append(f"<h1>{self.title}</h1>")
+        html_parts.append(f"<h1>{_escape_html(self.title)}</h1>")
         if self.include_timestamp:
-            html_parts.append(f"<p class='meta'>Generated: {self.created_at}</p>")
-            html_parts.append(f"<p class='meta'>By: {self.author}</p>")
+            html_parts.append(f"<p class='meta'>Generated: {_escape_html(self.created_at)}</p>")
+            html_parts.append(f"<p class='meta'>By: {_escape_html(self.author)}</p>")
 
         # Metadata
         if self.metadata:
@@ -243,20 +249,20 @@ class ReportGenerator:
             html_parts.append("<h2>Report Info</h2>")
             html_parts.append("<ul>")
             for key, value in self.metadata.items():
-                html_parts.append(f"<li><strong>{key}</strong>: {value}</li>")
+                html_parts.append(f"<li><strong>{_escape_html(key)}</strong>: {_escape_html(value)}</li>")
             html_parts.append("</ul>")
             html_parts.append("</div>")
 
         # Sections
         for section in self.sections:
             html_parts.append("<div class='section'>")
-            html_parts.append(f"<h2>{section['title']}</h2>")
+            html_parts.append(f"<h2>{_escape_html(section['title'])}</h2>")
 
             content = section["content"]
             section_type = section["type"]
 
             if section_type == "text":
-                html_parts.append(f"<p>{content}</p>")
+                html_parts.append(f"<p>{_escape_html(content)}</p>")
             elif section_type == "table" and isinstance(content, list):
                 html_parts.append(self._format_table_html(content))
             elif isinstance(content, dict):
@@ -264,7 +270,7 @@ class ReportGenerator:
             elif isinstance(content, list):
                 html_parts.append(self._format_list_html(content))
             else:
-                html_parts.append(f"<p>{content}</p>")
+                html_parts.append(f"<p>{_escape_html(content)}</p>")
 
             html_parts.append("</div>")
 
@@ -294,15 +300,15 @@ class ReportGenerator:
 
     def _format_dict_html(self, data: dict) -> str:
         """Format dictionary as HTML."""
-        html = "<dl>"
+        result = "<dl>"
         for key, value in data.items():
-            formatted_key = key.replace("_", " ").title()
+            formatted_key = _escape_html(key.replace("_", " ").title())
             if isinstance(value, dict):
-                html += f"<dt>{formatted_key}</dt>"
-                html += f"<dd>{self._format_dict_html(value)}</dd>"
+                result += f"<dt>{formatted_key}</dt>"
+                result += f"<dd>{self._format_dict_html(value)}</dd>"
             elif isinstance(value, list):
-                html += f"<dt>{formatted_key}</dt>"
-                html += f"<dd>{self._format_list_html(value)}</dd>"
+                result += f"<dt>{formatted_key}</dt>"
+                result += f"<dd>{self._format_list_html(value)}</dd>"
             else:
                 if isinstance(value, float):
                     if 0 < abs(value) < 1:
@@ -310,21 +316,21 @@ class ReportGenerator:
                     else:
                         formatted_value = f"{value:,.2f}"
                 else:
-                    formatted_value = str(value)
-                html += f"<dt>{formatted_key}</dt><dd>{formatted_value}</dd>"
-        html += "</dl>"
-        return html
+                    formatted_value = _escape_html(value)
+                result += f"<dt>{formatted_key}</dt><dd>{formatted_value}</dd>"
+        result += "</dl>"
+        return result
 
     def _format_list_html(self, data: list) -> str:
         """Format list as HTML."""
-        html = "<ul>"
+        result = "<ul>"
         for item in data:
             if isinstance(item, dict):
-                html += f"<li>{self._format_dict_html(item)}</li>"
+                result += f"<li>{self._format_dict_html(item)}</li>"
             else:
-                html += f"<li>{item}</li>"
-        html += "</ul>"
-        return html
+                result += f"<li>{_escape_html(item)}</li>"
+        result += "</ul>"
+        return result
 
     def _format_table_html(self, data: list) -> str:
         """Format list of dicts as HTML table."""
@@ -333,15 +339,15 @@ class ReportGenerator:
 
         headers = list(data[0].keys())
 
-        html = "<table>"
-        html += "<thead><tr>"
+        result = "<table>"
+        result += "<thead><tr>"
         for h in headers:
-            html += f"<th>{h.replace('_', ' ').title()}</th>"
-        html += "</tr></thead>"
+            result += f"<th>{_escape_html(h.replace('_', ' ').title())}</th>"
+        result += "</tr></thead>"
 
-        html += "<tbody>"
+        result += "<tbody>"
         for row in data:
-            html += "<tr>"
+            result += "<tr>"
             for h in headers:
                 val = row.get(h, "")
                 if isinstance(val, float):
@@ -349,11 +355,13 @@ class ReportGenerator:
                         val = f"{val:.2%}"
                     else:
                         val = f"{val:,.2f}"
-                html += f"<td>{val}</td>"
-            html += "</tr>"
-        html += "</tbody></table>"
+                else:
+                    val = _escape_html(val)
+                result += f"<td>{val}</td>"
+            result += "</tr>"
+        result += "</tbody></table>"
 
-        return html
+        return result
 
     def save(
         self,
