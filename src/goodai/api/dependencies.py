@@ -10,7 +10,7 @@ Good AI Philosophy: Leverage, not lore - dependency injection enables testing.
 from functools import lru_cache
 from typing import Optional
 
-from goodai.config import get_settings, Settings, AIConfig
+from goodai.config import get_settings
 from goodai.modules.anomaly_detection import AnomalyDetector
 from goodai.core.assessment_engine import AssessmentEngine
 from goodai.core.roi_calculator import ROICalculator

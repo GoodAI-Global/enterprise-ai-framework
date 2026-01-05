@@ -7,10 +7,9 @@ Focuses on realistic, evidence-based projections.
 Good AI Philosophy: Evidence over opinions.
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 from enum import Enum
-import math
 
 
 class ConfidenceLevel(Enum):
@@ -497,8 +496,6 @@ class ROICalculator:
         annual_benefit: float
     ) -> Dict[str, float]:
         """Calculate sensitivity of ROI to key variables."""
-        base_roi = self._calculate_roi(investment, annual_benefit)
-
         return {
             "roi_if_benefits_minus_20pct": round(
                 self._calculate_roi(investment, annual_benefit * 0.8), 1

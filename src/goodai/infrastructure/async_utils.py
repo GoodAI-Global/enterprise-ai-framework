@@ -6,11 +6,10 @@ concurrent execution, and error handling.
 """
 
 import asyncio
-from concurrent.futures import ThreadPoolExecutor, Future
-from dataclasses import dataclass, field
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Awaitable, Callable, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Callable, Coroutine, Dict, Generic, List, Optional, TypeVar, Union
 import threading
 import time
 
@@ -120,7 +119,7 @@ class AsyncExecutor:
             self._record_timeout(time.time() - start)
             raise
 
-        except Exception as e:
+        except Exception:
             self._record_failure(time.time() - start)
             raise
 
@@ -161,7 +160,7 @@ class AsyncExecutor:
             self._record_success(time.time() - start)
             return result
 
-        except Exception as e:
+        except Exception:
             self._record_failure(time.time() - start)
             raise
 

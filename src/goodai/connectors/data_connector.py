@@ -7,11 +7,9 @@ Supports CSV, JSON, databases, and APIs.
 Good AI Philosophy: Non-invasive by default.
 """
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
-from urllib.parse import urlparse
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 

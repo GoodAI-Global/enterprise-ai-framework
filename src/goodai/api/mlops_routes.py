@@ -5,31 +5,25 @@ Exposes model registry, A/B testing, feedback, and explainability
 functionality via REST endpoints.
 """
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from goodai.mlops.registry import (
-    ModelRegistry,
     ModelMetrics,
     ModelStatus,
     get_model_registry,
 )
 from goodai.mlops.ab_testing import (
-    ABTestingFramework,
     ExperimentStatus,
     get_ab_framework,
 )
 from goodai.mlops.feedback import (
     FeedbackType,
-    FeedbackLoop,
     get_feedback_loop,
 )
 from goodai.mlops.explainability import (
-    ExplanationType,
-    ExplainabilityEngine,
     get_explainability_engine,
 )
 from goodai.monitoring import get_logger
@@ -209,7 +203,16 @@ async def list_versions(
 ):
     """List versions of a model."""
     registry = get_model_registry()
-    status_enum = ModelStatus(status) if status else None
+    status_enum = None
+    if status:
+        try:
+            status_enum = ModelStatus(status)
+        except ValueError:
+            valid_values = [s.value for s in ModelStatus]
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid status '{status}'. Valid values: {valid_values}"
+            )
     versions = registry.list_versions(model_name, status=status_enum)
     return [v.to_dict() for v in versions]
 
@@ -285,7 +288,16 @@ async def create_experiment(request: ExperimentCreate):
 async def list_experiments(status: Optional[str] = None):
     """List all experiments."""
     ab = get_ab_framework()
-    status_enum = ExperimentStatus(status) if status else None
+    status_enum = None
+    if status:
+        try:
+            status_enum = ExperimentStatus(status)
+        except ValueError:
+            valid_values = [s.value for s in ExperimentStatus]
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid status '{status}'. Valid values: {valid_values}"
+            )
     experiments = ab.list_experiments(status=status_enum)
     return [e.to_dict() for e in experiments]
 
@@ -439,7 +451,16 @@ async def get_feedback(
 ):
     """Query feedback entries."""
     loop = get_feedback_loop()
-    type_enum = FeedbackType(feedback_type) if feedback_type else None
+    type_enum = None
+    if feedback_type:
+        try:
+            type_enum = FeedbackType(feedback_type)
+        except ValueError:
+            valid_values = [t.value for t in FeedbackType]
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid feedback_type '{feedback_type}'. Valid values: {valid_values}"
+            )
     entries = loop.get_feedback(
         model_name=model_name,
         model_version=model_version,

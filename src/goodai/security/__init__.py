@@ -5,6 +5,7 @@ from goodai.security.tenancy import (
     Tenant,
     TenantManager,
     get_current_tenant,
+    get_tenant_manager,
     require_tenant,
 )
 from goodai.security.audit import (
@@ -17,6 +18,9 @@ from goodai.security.rbac import (
     Permission,
     Role,
     RBACManager,
+    get_rbac_manager,
+    get_current_roles,
+    get_current_user_id,
     require_permission,
     require_role,
 )
@@ -27,6 +31,7 @@ __all__ = [
     "Tenant",
     "TenantManager",
     "get_current_tenant",
+    "get_tenant_manager",
     "require_tenant",
     # Audit
     "AuditLogger",
@@ -37,6 +42,9 @@ __all__ = [
     "Permission",
     "Role",
     "RBACManager",
+    "get_rbac_manager",
+    "get_current_roles",
+    "get_current_user_id",
     "require_permission",
     "require_role",
 ]

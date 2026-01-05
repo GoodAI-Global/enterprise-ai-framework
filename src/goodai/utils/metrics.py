@@ -7,12 +7,11 @@ Includes OEE, TEEP, and custom KPI tracking.
 Good AI Philosophy: Evidence over opinions.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 import pandas as pd
-import numpy as np
 
 
 @dataclass

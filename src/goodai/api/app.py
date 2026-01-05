@@ -232,7 +232,6 @@ def _register_core_routes(app: "FastAPI"):
     async def assess_readiness(request: AssessmentRequest):
         """Assess AI readiness."""
         from goodai.core.assessment_engine import AssessmentEngine
-        from dataclasses import asdict
 
         engine = AssessmentEngine(industry=request.industry)
         result = engine.assess_readiness(request.company_data)
@@ -411,7 +410,7 @@ def _register_module_health_checks(hc: HealthCheck):
     def check_feedback_loop():
         try:
             from goodai.mlops.feedback import get_feedback_loop
-            loop = get_feedback_loop()
+            get_feedback_loop()  # Verify it can be instantiated
             return {
                 "status": HealthStatus.HEALTHY,
             }
@@ -464,7 +463,7 @@ def _register_module_health_checks(hc: HealthCheck):
     def check_schema_registry():
         try:
             from goodai.infrastructure.validation import get_schema_registry
-            registry = get_schema_registry()
+            get_schema_registry()  # Verify it can be instantiated
             return {
                 "status": HealthStatus.HEALTHY,
             }

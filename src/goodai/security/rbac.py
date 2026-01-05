@@ -12,16 +12,16 @@ Good AI Philosophy: Non-invasive by default - RBAC is optional.
 import threading
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum
 from functools import wraps
-from typing import Callable, Dict, List, Optional, Set, Union
+from typing import Callable, Dict, List, Optional, Set
 
 from goodai.monitoring import get_logger
 
 logger = get_logger(__name__)
 
 # Context variable for current user's roles
-_current_roles: ContextVar[Set[str]] = ContextVar("current_roles", default=set())
+_current_roles: ContextVar[Optional[Set[str]]] = ContextVar("current_roles", default=None)
 _current_user_id: ContextVar[Optional[str]] = ContextVar("current_user_id", default=None)
 
 
@@ -112,7 +112,7 @@ class UserContext:
 
 def get_current_roles() -> Set[str]:
     """Get current user's roles from context."""
-    return _current_roles.get()
+    return _current_roles.get() or set()
 
 
 def get_current_user_id() -> Optional[str]:
