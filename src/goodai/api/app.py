@@ -77,17 +77,23 @@ def create_app(
             allow_headers=["*"],
         )
 
-    # Add custom middleware
+    # Add custom middleware (order matters - first added is last executed)
     from goodai.api.middleware import (
         CorrelationMiddleware,
         RequestLoggingMiddleware,
+        AuditMiddleware,
+        TenantMiddleware,
     )
-    app.add_middleware(CorrelationMiddleware)
+    # Execution order: Correlation -> Tenant -> Audit -> Logging -> Handler
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(AuditMiddleware)
+    app.add_middleware(TenantMiddleware)
+    app.add_middleware(CorrelationMiddleware)
 
     # Register routes
     _register_health_routes(app, settings)
     _register_core_routes(app)
+    _register_mlops_routes(app)
 
     # Error handlers
     @app.exception_handler(Exception)
@@ -132,6 +138,9 @@ def _register_health_routes(app: "FastAPI", settings: Settings):
 
     router = APIRouter(prefix="/health", tags=["Health"])
     hc = health_check(version=settings.version)
+
+    # Register comprehensive health checks for all modules
+    _register_module_health_checks(hc)
 
     @router.get("")
     async def health():
@@ -340,3 +349,182 @@ def reset_app() -> None:
     """Reset the global app instance (for testing)."""
     global _app
     _app = None
+
+
+def _register_mlops_routes(app: "FastAPI"):
+    """Register MLOps routes for model registry, experiments, feedback, and explainability."""
+    from goodai.api.mlops_routes import (
+        model_router,
+        experiment_router,
+        feedback_router,
+        explain_router,
+    )
+
+    # Add prefix for versioned API
+    app.include_router(model_router, prefix="/api/v1")
+    app.include_router(experiment_router, prefix="/api/v1")
+    app.include_router(feedback_router, prefix="/api/v1")
+    app.include_router(explain_router, prefix="/api/v1")
+
+
+def _register_module_health_checks(hc: HealthCheck):
+    """Register health checks for all enterprise modules."""
+    from goodai.monitoring import HealthStatus
+
+    # Model Registry health check
+    def check_model_registry():
+        try:
+            from goodai.mlops.registry import get_model_registry
+            registry = get_model_registry()
+            model_count = len(registry.list_models())
+            return {
+                "status": HealthStatus.HEALTHY,
+                "model_count": model_count,
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("model_registry", check_model_registry, critical=False)
+
+    # A/B Testing Framework health check
+    def check_ab_testing():
+        try:
+            from goodai.mlops.ab_testing import get_ab_framework
+            framework = get_ab_framework()
+            experiment_count = len(framework.list_experiments())
+            return {
+                "status": HealthStatus.HEALTHY,
+                "experiment_count": experiment_count,
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("ab_testing", check_ab_testing, critical=False)
+
+    # Feedback Loop health check
+    def check_feedback_loop():
+        try:
+            from goodai.mlops.feedback import get_feedback_loop
+            loop = get_feedback_loop()
+            return {
+                "status": HealthStatus.HEALTHY,
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("feedback_loop", check_feedback_loop, critical=False)
+
+    # Cache health check
+    def check_cache():
+        try:
+            from goodai.infrastructure.cache import get_cache_manager
+            manager = get_cache_manager()
+            stats = manager.get_all_stats()
+            return {
+                "status": HealthStatus.HEALTHY,
+                "namespaces": list(stats.keys()),
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("cache", check_cache, critical=False)
+
+    # Async Executor health check
+    def check_async_executor():
+        try:
+            from goodai.infrastructure.async_utils import get_async_executor
+            executor = get_async_executor()
+            stats = executor.get_stats()
+            return {
+                "status": HealthStatus.HEALTHY,
+                "total_executions": stats.get("total_executions", 0),
+                "success_rate": stats.get("success_rate", 0),
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("async_executor", check_async_executor, critical=False)
+
+    # Schema Registry health check
+    def check_schema_registry():
+        try:
+            from goodai.infrastructure.validation import get_schema_registry
+            registry = get_schema_registry()
+            return {
+                "status": HealthStatus.HEALTHY,
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("schema_registry", check_schema_registry, critical=False)
+
+    # Audit Logger health check
+    def check_audit_logger():
+        try:
+            from goodai.security.audit import get_audit_logger
+            audit = get_audit_logger()
+            audit.query(limit=1)
+            return {
+                "status": HealthStatus.HEALTHY,
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("audit_logger", check_audit_logger, critical=False)
+
+    # RBAC Manager health check
+    def check_rbac():
+        try:
+            from goodai.security.rbac import get_rbac_manager
+            manager = get_rbac_manager()
+            roles = manager.list_roles()
+            return {
+                "status": HealthStatus.HEALTHY,
+                "role_count": len(roles),
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("rbac", check_rbac, critical=False)
+
+    # Tenant Manager health check
+    def check_tenant_manager():
+        try:
+            from goodai.security.tenancy import get_tenant_manager
+            manager = get_tenant_manager()
+            tenants = manager.list_tenants()
+            return {
+                "status": HealthStatus.HEALTHY,
+                "tenant_count": len(tenants),
+            }
+        except Exception as e:
+            return {
+                "status": HealthStatus.UNHEALTHY,
+                "error": str(e),
+            }
+
+    hc.add_check("tenant_manager", check_tenant_manager, critical=False)

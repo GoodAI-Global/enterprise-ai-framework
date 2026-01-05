@@ -194,3 +194,133 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["X-RateLimit-Reset"] = str(int(window_start + 60))
 
         return response
+
+
+class AuditMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware for audit logging.
+
+    Logs API operations to the audit trail for compliance.
+    """
+
+    # Map HTTP methods to audit event types
+    AUDIT_OPERATIONS = {
+        "GET": "DATA_READ",
+        "POST": "DATA_CREATE",
+        "PUT": "DATA_UPDATE",
+        "PATCH": "DATA_UPDATE",
+        "DELETE": "DATA_DELETE",
+    }
+
+    # Paths that require audit logging
+    AUDIT_PATHS = {
+        "/api/v1/models",
+        "/api/v1/experiments",
+        "/api/v1/feedback",
+        "/api/v1/anomaly",
+        "/api/v1/assessment",
+        "/api/v1/roi",
+    }
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        # Check if path should be audited
+        should_audit = any(request.url.path.startswith(p) for p in self.AUDIT_PATHS)
+
+        if not should_audit:
+            return await call_next(request)
+
+        from goodai.security.audit import AuditEventType, get_audit_logger
+        from goodai.monitoring import get_correlation_id
+
+        audit = get_audit_logger()
+        start_time = time.time()
+
+        # Extract context
+        tenant_id = request.headers.get("X-Tenant-ID")
+        user_id = request.headers.get("X-User-ID")
+        correlation_id = get_correlation_id()
+
+        # Determine event type based on method
+        event_type_name = self.AUDIT_OPERATIONS.get(request.method, "DATA_READ")
+        event_type = getattr(AuditEventType, event_type_name, AuditEventType.DATA_READ)
+
+        try:
+            response = await call_next(request)
+            duration_ms = (time.time() - start_time) * 1000
+
+            # Log successful operation (tenant_id is obtained from context)
+            audit.log(
+                event_type=event_type,
+                action=f"{request.method} {request.url.path}",
+                actor_id=user_id,
+                resource_type="api",
+                resource_id=request.url.path,
+                outcome="success",
+                details={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": response.status_code,
+                    "duration_ms": round(duration_ms, 2),
+                    "correlation_id": correlation_id,
+                    "tenant_id": tenant_id,
+                },
+            )
+
+            return response
+
+        except Exception as e:
+            duration_ms = (time.time() - start_time) * 1000
+
+            # Log failed operation
+            audit.log(
+                event_type=event_type,
+                action=f"{request.method} {request.url.path}",
+                actor_id=user_id,
+                resource_type="api",
+                resource_id=request.url.path,
+                outcome="failure",
+                details={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "duration_ms": round(duration_ms, 2),
+                    "correlation_id": correlation_id,
+                    "tenant_id": tenant_id,
+                },
+            )
+            raise
+
+
+class TenantMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware for multi-tenancy support.
+
+    Extracts tenant context from headers and validates tenant access.
+    """
+
+    TENANT_HEADER = "X-Tenant-ID"
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        from goodai.security.tenancy import TenantContext, get_tenant_manager, Tenant
+
+        tenant_id = request.headers.get(self.TENANT_HEADER)
+
+        if tenant_id:
+            # Get or create tenant context
+            manager = get_tenant_manager()
+            tenant = manager.get_tenant(tenant_id)
+
+            if tenant:
+                with TenantContext(tenant):
+                    response = await call_next(request)
+            else:
+                # Tenant not found - create temporary context
+                temp_tenant = Tenant(id=tenant_id, name=tenant_id)
+                with TenantContext(temp_tenant):
+                    response = await call_next(request)
+        else:
+            # No tenant specified - proceed without tenant context
+            response = await call_next(request)
+
+        return response
