@@ -2,6 +2,7 @@
 
 from goodai.monitoring.logging import (
     get_logger,
+    get_correlation_id,
     configure_logging,
     CorrelationContext,
     LogLevel,
@@ -16,6 +17,7 @@ from goodai.monitoring.health import (
 __all__ = [
     # Logging
     "get_logger",
+    "get_correlation_id",
     "configure_logging",
     "CorrelationContext",
     "LogLevel",
