@@ -4,7 +4,6 @@ Tests for ML Operations Module
 Tests for model registry, A/B testing, feedback loops, and explainability.
 """
 
-import json
 import pytest
 from datetime import datetime, timedelta
 
@@ -17,9 +16,7 @@ from goodai.mlops.registry import (
     get_model_registry,
 )
 from goodai.mlops.ab_testing import (
-    Experiment,
     ExperimentStatus,
-    Variant,
     VariantMetrics,
     ABTestingFramework,
     get_ab_framework,

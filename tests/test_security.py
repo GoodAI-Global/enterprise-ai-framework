@@ -6,7 +6,6 @@ Tests for multi-tenancy, audit logging, and RBAC.
 
 import json
 import pytest
-from datetime import datetime
 
 from goodai.security.tenancy import (
     Tenant,
@@ -16,7 +15,6 @@ from goodai.security.tenancy import (
     TenantRequiredError,
     get_current_tenant,
     require_tenant,
-    get_tenant_manager,
     reset_tenant_manager,
 )
 from goodai.security.audit import (
@@ -38,7 +36,6 @@ from goodai.security.rbac import (
     require_role,
     get_current_roles,
     get_current_user_id,
-    get_rbac_manager,
     reset_rbac_manager,
 )
 

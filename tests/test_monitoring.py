@@ -11,9 +11,7 @@ import pytest
 
 from goodai.monitoring.logging import (
     get_logger,
-    configure_logging,
     CorrelationContext,
-    LogLevel,
     StructuredLogger,
     StructuredFormatter,
     HumanReadableFormatter,

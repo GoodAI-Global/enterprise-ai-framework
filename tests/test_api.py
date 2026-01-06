@@ -12,10 +12,6 @@ pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient
 
 from goodai.api.app import create_app, get_app, reset_app
-from goodai.api.middleware import (
-    CorrelationMiddleware,
-    RequestLoggingMiddleware,
-)
 from goodai.api.dependencies import (
     get_anomaly_detector,
     get_assessment_engine,

@@ -1,8 +1,9 @@
 # Good AI Enterprise Framework
 
 [![CI](https://github.com/GoodAI-Global/enterprise-ai-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/GoodAI-Global/enterprise-ai-framework/actions/workflows/ci.yml)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 Enterprise AI implementation toolkit for manufacturing environments.
 
@@ -65,7 +66,17 @@ print(f"Found {results['is_anomaly'].sum()} anomalies")
 | Infrastructure (Cache, Async, Validation) | Beta | Yes |
 | REST API | Beta | Yes |
 
-**Test Coverage**: 73% (300 tests passing)
+**Test Coverage**: 73% (300+ tests passing)
+
+## API Stability
+
+This is **v0.1.0** - the API is not yet stable.
+
+- **Core modules** (`anomaly_detection`, `assessment_engine`, `roi_calculator`): Relatively stable
+- **MLOps/Security/Infrastructure**: May change between minor versions
+- **REST API**: Endpoint paths and response formats may change
+
+We follow [Semantic Versioning](https://semver.org/). Breaking changes will be documented in [CHANGELOG.md](CHANGELOG.md).
 
 ## Architecture
 

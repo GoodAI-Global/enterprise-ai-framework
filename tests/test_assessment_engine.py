@@ -4,7 +4,6 @@ Tests for Assessment Engine Module
 Tests the AI readiness assessment logic.
 """
 
-import pytest
 
 from goodai.core.assessment_engine import (
     AssessmentEngine,

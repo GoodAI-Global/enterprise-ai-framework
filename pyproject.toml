@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Enterprise AI Implementation Framework by Good AI"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     {name = "Good AI", email = "engineering@goodai.com"}
 ]
@@ -17,7 +17,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -37,6 +36,8 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "httpx>=0.25.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
 ]
 api = [
     "fastapi>=0.100.0",
@@ -50,8 +51,10 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/goodai/enterprise-ai-framework"
-Documentation = "https://github.com/goodai/enterprise-ai-framework#readme"
+Homepage = "https://github.com/GoodAI-Global/enterprise-ai-framework"
+Documentation = "https://github.com/GoodAI-Global/enterprise-ai-framework#readme"
+Repository = "https://github.com/GoodAI-Global/enterprise-ai-framework"
+Changelog = "https://github.com/GoodAI-Global/enterprise-ai-framework/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -61,3 +64,28 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "E712",  # comparison to True/False (acceptable in tests)
+    "E721",  # type comparison (acceptable in config parsing)
+    "B007",  # unused loop control variable (use _ prefix if needed)
+    "B008",  # function call in default argument (FastAPI pattern)
+    "B904",  # raise from in except (common HTTP pattern)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "E402", "F401", "F841"]  # assert, late imports, unused allowed in tests
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
