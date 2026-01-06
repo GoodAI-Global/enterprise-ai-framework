@@ -38,6 +38,8 @@ dev = [
     "httpx>=0.25.0",
     "ruff>=0.1.0",
     "mypy>=1.0.0",
+    "build>=1.0.0",
+    "twine>=4.0.0",
 ]
 api = [
     "fastapi>=0.100.0",
@@ -55,6 +57,7 @@ Homepage = "https://github.com/GoodAI-Global/enterprise-ai-framework"
 Documentation = "https://github.com/GoodAI-Global/enterprise-ai-framework#readme"
 Repository = "https://github.com/GoodAI-Global/enterprise-ai-framework"
 Changelog = "https://github.com/GoodAI-Global/enterprise-ai-framework/blob/main/CHANGELOG.md"
+Issues = "https://github.com/GoodAI-Global/enterprise-ai-framework/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
